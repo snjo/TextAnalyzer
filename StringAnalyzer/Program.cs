@@ -1,6 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using StringAnalyzer;
-using System.Drawing;
+using System.Text;
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine("String analyzer");
 
@@ -29,10 +29,11 @@ Console.WriteLine("String analyzer");
 
 bool fileLoaded = false;
 string[] lines = { };
+string result = "";
 
 
 bool quit = false;
-int lineNumber = -1;
+int lineNumber = 0;
 
 while (!quit)
 {
@@ -51,9 +52,9 @@ while (!quit)
         }
     }
     Console.ForegroundColor = ConsoleColor.DarkBlue;
-    Console.WriteLine("s > Search for text.  a > analyze line chars.  q > quit.  l > load file.  [number] > select line.");
+    Console.WriteLine("S > Search for text.  A > analyze line chars.  Q > quit.  L > load file.  [number] > select line.");
     Console.ForegroundColor = ConsoleColor.Green;
-    Console.Write("s/q/a/l/number: ");
+    Console.Write($"[{lineNumber}]: ");
     string? command = Console.ReadLine();
     if (command == null) continue;
     if (command.ToLower() == "q")
@@ -80,26 +81,43 @@ while (!quit)
             }
         }
     }
+    else if (command.ToLower() == "save")
+    {
+        string fileDestination = Path.GetFullPath("result.txt");
+        try
+        {
+            File.WriteAllText(fileDestination, result);
+            Console.WriteLine($"File saved to: {fileDestination}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Could not save file: {fileDestination}");
+            Console.WriteLine(ex.Message);
+        }
+    }
     else if (command.ToLower() == "a")
     {
-        if (lineNumber < 0)
+        StringBuilder sb = new();
+        Console.WriteLine($"Analyzing line number {lineNumber}");
+        if (lineNumber < 0 || lineNumber >= lines.Length)
         {
-            Console.WriteLine("Specify a line number first");
+            Console.WriteLine("Invalid line number");
         }
         else
         {
-            Console.WriteLine($"Analyzing line number {lineNumber}");
-            if (lineNumber < 0 || lineNumber >= lines.Length)
-            {
-                Console.WriteLine("Invalid line number");
-            }
             Console.ForegroundColor = ConsoleColor.White;
+            sb.AppendLine($"CHAR \tCOL \tHEX");
+            //Console.WriteLine($"CHAR \tCOL \tHEX");
             for (int i = 0; i < lines[lineNumber].Length; i++)// char c in lines[lineNumber])
             {
                 char c = lines[lineNumber][i];
                 string hex = ((int)c).ToString("X4");
-                Console.WriteLine($"{c} : {(int)c} / {hex}");
+                sb.AppendLine($"{c}\t#{i.ToString().PadLeft(3, '0')}\t0x{hex}");
+                //Console.WriteLine($"{c} \t#{i.ToString().PadLeft(3,'0')} \t0x{hex}");
             }
+            result = sb.ToString();
+            Console.WriteLine(result);
+            Console.WriteLine("type 'save' to export result");
             Console.ForegroundColor = ConsoleColor.Green;
         }
     }
@@ -123,6 +141,7 @@ while (!quit)
         catch (Exception ex)
         {
             Console.WriteLine("Invalid input");
+            lineNumber = 0;
         }
     }
 }

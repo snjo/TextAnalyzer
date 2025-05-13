@@ -15,7 +15,7 @@ namespace StringAnalyzer
             string? fileName = null;
             while (fileFound == false)
             {
-                Console.Write("Load text file: ");
+                Console.Write("Load text file (q to quit): ");
                 command = Console.ReadLine();
                 if (command?.ToLower() == "q")
                 {
