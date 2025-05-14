@@ -74,6 +74,11 @@ while (!quit)
     {
         Console.Write("Search for: ");
         string? search = Console.ReadLine();
+        if (search.ToLower() == "error")
+        {
+            search = '\uFFFD'.ToString();
+        }
+        Console.Write($"Searching for {search} / {(int)search[0]}");
         if (search == null) continue;
         for (int i = 0; i < lines.Length; i++)
         {
