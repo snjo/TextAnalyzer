@@ -120,7 +120,8 @@ while (!quit)
             {
                 char c = lines[lineNumber][i];
                 string hex = ((int)c).ToString("X4");
-                sb.AppendLine($"{c}\t#{i.ToString().PadLeft(3, '0')}\t0x{hex}");
+                string displayChar = c.ToString().Replace("\t", "TAB");
+                sb.AppendLine($"{displayChar}\t#{i.ToString().PadLeft(3, '0')}\t0x{hex}");
                 //Console.WriteLine($"{c} \t#{i.ToString().PadLeft(3,'0')} \t0x{hex}");
             }
             result = sb.ToString();
