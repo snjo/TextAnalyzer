@@ -27,7 +27,12 @@ namespace StringAnalyzer
             foreach(string line in lines)
             {
                 string[] values = line.Split(';');
-                symbolDict.Add(values[0], values[1]);
+                string description = values[1];
+                if (description == "<control>")
+                {
+                    description = values[3];
+                }
+                symbolDict.Add(values[0], description);
             }
 
             return symbolDict;

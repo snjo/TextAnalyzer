@@ -26,33 +26,49 @@ namespace StringAnalyzer
                 int ConsoleWidth = Console.WindowWidth;
                 Console.Clear();
                 Console.WriteLine("TEXT NAVIGATOR");
-                for (int i = currentLine - 1; i < currentLine+2; i++)
+                for (int i = currentLine - 1; i < currentLine+6; i++)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkBlue;
                     if (i < 0)
                     {
                         Console.WriteLine("START OF FILE");
                     }
-                    else if (i >= lines.Length)
+                    else if (i == lines.Length)
                     {
                         Console.WriteLine($"END OF FILE");
                     }
+                    else if (i > lines.Length)
+                    {
+                        Console.WriteLine($".");
+                    }
                     else
                     {
-                        Console.Write($"[{(currentLine + (i-currentLine)).ToString().PadLeft(4, '0')}] ");
+                        Console.Write($"[{(currentLine + (i - currentLine)).ToString().PadLeft(4, '0')}] ");
                         Console.ForegroundColor = ConsoleColor.White;
-                        Console.WriteLine(lines[i].Substring(0,Math.Min(lines[i].Length,ConsoleWidth-LineInfoPadding)));
+                        string displayText = lines[i].Substring(0, Math.Min(lines[i].Length, ConsoleWidth - LineInfoPadding));
+                        displayText = displayText.Replace('\t', '▓');
+                        displayText = displayText.Replace('\uFFFD', '█'); // make unicode replacement characters obvious
+                        Console.WriteLine(displayText);
                     }
                 }
-                
-                
+
+                Debug.WriteLine($"cl:{currentLine} / {lines.Length}   cc:{currentCol}");
 
                 // DRAW SELECTED CHARACTER
                 int clampedCol = Math.Min(currentCol, lines[currentLine].Length - 1);
                 clampedCol = Math.Max(0, clampedCol);
                 clampedCol = Math.Min(clampedCol, ConsoleWidth - LineInfoPadding - 1);
-                char SelectedChar = lines[currentLine][clampedCol];
+                char? SelectedChar = null;
+                if (lines[currentLine].Length > 0)
+                {
+                    SelectedChar = lines[currentLine][clampedCol];
+                }
+                else
+                {
+                    Debug.WriteLine("line is empty");
+                }
 
+                Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine($"-----");
                 Console.WriteLine($"Line:{currentLine} Col:{clampedCol}");
                 Console.WriteLine($"Character: {SelectedChar}");
@@ -60,7 +76,11 @@ namespace StringAnalyzer
 
                 if (clampedCol != currentCol) currentCol = clampedCol;
 
-                string hex = ((int)SelectedChar).ToString("X4");
+                string hex = "...";
+                if (SelectedChar != null)
+                {
+                    hex = ((int)SelectedChar).ToString("X4");
+                }
                 Console.WriteLine($"Hex code: {hex}");
                 string symbolname = "UNKNOWN";
                 if (unicodeSymbols.ContainsKey(hex))
@@ -69,11 +89,18 @@ namespace StringAnalyzer
                 }
                 Console.WriteLine($"Unicode name: {symbolname}");
 
+                
 
                 Console.SetCursorPosition(clampedCol + LineInfoPadding, 2);
                 Console.BackgroundColor = ConsoleColor.Red;
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write(SelectedChar);
+                string displayChar = "";
+                if (SelectedChar != null)
+                {
+                    displayChar = SelectedChar.ToString() + "";
+                    displayChar = displayChar.Replace('\t', '▓');
+                }
+                Console.Write(displayChar);
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.BackgroundColor = ConsoleColor.Black;
 
