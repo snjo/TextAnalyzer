@@ -39,5 +39,10 @@ namespace StringAnalyzer
             string[] lines = File.ReadAllLines(fileName);
             return lines;
         }
+        public static string LoadText(string fileName)
+        {
+            string text = File.ReadAllText(fileName);
+            return text;
+        }
     }
 }

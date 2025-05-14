@@ -29,11 +29,14 @@ Console.WriteLine("String analyzer");
 
 bool fileLoaded = false;
 string[] lines = { };
+string text = "";
 string result = "";
 
 
 bool quit = false;
 int lineNumber = 0;
+
+Dictionary<string, string> unicodeSymbols = UnicodeData.GetUnicodeData();
 
 while (!quit)
 {
@@ -42,6 +45,7 @@ while (!quit)
         string? fileName = FileLoader.SelectFile();
         if (fileName == null) return;
         lines = FileLoader.LoadLines(fileName);
+        text = FileLoader.LoadText(fileName);
         if (lines.Length > 0)
         {
             fileLoaded = true;
@@ -52,7 +56,7 @@ while (!quit)
         }
     }
     Console.ForegroundColor = ConsoleColor.DarkBlue;
-    Console.WriteLine("S > Search for text.  A > analyze line chars.  Q > quit.  L > load file.  [number] > select line.");
+    Console.WriteLine("S > Search for text.  A > analyze line chars.  Q > quit.  L > load file.  [number] > select line.  t > browse text");
     Console.ForegroundColor = ConsoleColor.Green;
     Console.Write($"[{lineNumber}]: ");
     string? command = Console.ReadLine();
@@ -80,6 +84,10 @@ while (!quit)
                 Console.ForegroundColor = ConsoleColor.Green;
             }
         }
+    }
+    else if (command.ToLower() == "t")
+    {
+        TextDisplay.NavigateText(text, unicodeSymbols);
     }
     else if (command.ToLower() == "save")
     {
