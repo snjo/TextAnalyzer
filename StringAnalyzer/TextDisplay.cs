@@ -64,17 +64,19 @@ namespace StringAnalyzer
                     string sub = (string)enumerator.Current;
                     sub = sub.Replace('\t', '▓');
                     sub = sub.Replace('\uFFFD', '█');
-                    textElements.Append(sub);
+                    textElements.Add(sub);
+                    count++;
                 }
+                int currentLineLength = textElements.Count;
 
                 // DRAW SELECTED CHARACTER
-                int clampedCol = Math.Min(currentCol, lines[currentLine].Length - 1);
-                clampedCol = Math.Max(0, clampedCol);
+                int clampedCol = Math.Min(currentCol, textElements.Count - 1);
+                clampedCol = Math.Max(0, clampedCol); // prevent negative numbers
                 clampedCol = Math.Min(clampedCol, ConsoleWidth - LineInfoPadding - 1);
-                char? SelectedChar = null;
-                if (lines[currentLine].Length > 0)
+                string SelectedChar = "";
+                if (textElements.Count > 0)//lines[currentLine].Length > 0)
                 {
-                    SelectedChar = lines[currentLine][clampedCol];
+                    SelectedChar = textElements[clampedCol];
                 }
                 else
                 {
@@ -90,9 +92,11 @@ namespace StringAnalyzer
                 if (clampedCol != currentCol) currentCol = clampedCol;
 
                 string hex = "...";
-                if (SelectedChar != null)
+                if (SelectedChar != null && SelectedChar.Length > 0)
                 {
-                    hex = ((int)SelectedChar).ToString("X4");
+                    //hex = ((int)SelectedChar).ToString("X4");
+                    //int codepoint = char.ConvertToUtf32(sub, 0);
+                    hex = $"{char.ConvertToUtf32(SelectedChar, 0):X4}";
                 }
                 Console.WriteLine($"Hex code: {hex}");
                 string symbolname = "UNKNOWN";
@@ -110,7 +114,7 @@ namespace StringAnalyzer
                 string displayChar = "";
                 if (SelectedChar != null)
                 {
-                    displayChar = SelectedChar.ToString() + "";
+                    displayChar = SelectedChar; //SelectedChar.ToString() + "";
                     displayChar = displayChar.Replace('\t', '▓');
                 }
                 Console.Write(displayChar);
@@ -151,9 +155,9 @@ namespace StringAnalyzer
                 else if (keyInfo.Key == ConsoleKey.RightArrow)
                 {
                     currentCol++;
-                    if (currentCol >= lines[currentLine].Length)
+                    if (currentCol >= currentLineLength)
                     {
-                        currentCol = lines[currentLine].Length - 1;
+                        currentCol = currentLineLength - 1;
                     }
                 }
             }
