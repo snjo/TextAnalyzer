@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,6 +55,18 @@ namespace StringAnalyzer
 
                 Debug.WriteLine($"cl:{currentLine} / {lines.Length}   cc:{currentCol}");
 
+                // Create unicode character list
+                TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(lines[currentLine]);
+                int count = 0;
+                List<string> textElements = [];
+                while (enumerator.MoveNext())
+                {
+                    string sub = (string)enumerator.Current;
+                    sub = sub.Replace('\t', '▓');
+                    sub = sub.Replace('\uFFFD', '█');
+                    textElements.Append(sub);
+                }
+
                 // DRAW SELECTED CHARACTER
                 int clampedCol = Math.Min(currentCol, lines[currentLine].Length - 1);
                 clampedCol = Math.Max(0, clampedCol);
@@ -83,9 +96,9 @@ namespace StringAnalyzer
                 }
                 Console.WriteLine($"Hex code: {hex}");
                 string symbolname = "UNKNOWN";
-                if (unicodeSymbols.ContainsKey(hex))
+                if (unicodeSymbols.TryGetValue(hex, out string? value))
                 {
-                    symbolname = unicodeSymbols[hex];
+                    symbolname = value;
                 }
                 Console.WriteLine($"Unicode name: {symbolname}");
 

@@ -1,5 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using StringAnalyzer;
+using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Unicode;
 Console.ForegroundColor = ConsoleColor.Green;
@@ -28,8 +30,10 @@ Console.WriteLine("String analyzer");
 //    return;
 //}
 
+Console.OutputEncoding = System.Text.Encoding.Unicode;
+
 bool fileLoaded = false;
-string[] lines = { };
+string[] lines = [];
 string text = "";
 string result = "";
 
@@ -44,9 +48,10 @@ while (!quit)
     if (fileLoaded == false)
     {
         string? fileName = FileLoader.SelectFile();
+        Encoding encoding = FileLoader.SelectEncoding();
         if (fileName == null) return;
-        lines = FileLoader.LoadLines(fileName);
-        text = FileLoader.LoadText(fileName);
+        lines = FileLoader.LoadLines(fileName, encoding);
+        text = FileLoader.LoadText(fileName, encoding);
         if (lines.Length > 0)
         {
             fileLoaded = true;
@@ -66,16 +71,16 @@ while (!quit)
     command = command.Trim();
     if (command.Length < 1) continue;
 
-    if (command.ToLower() == "q")
+    if (command.Equals("q", StringComparison.CurrentCultureIgnoreCase))
     { 
         quit = true;
     }
-    else if (command.ToLower() == "l")
+    else if (command.Equals("l", StringComparison.CurrentCultureIgnoreCase))
     {
         fileLoaded = false;
         // go back to file select
     }
-    else if (command.ToLower() == "s")
+    else if (command.Equals("s", StringComparison.CurrentCultureIgnoreCase))
     {
         Console.WriteLine("Search for text in file. use 'error' to search for '0xFFFD' (Replacement Char) or '0x[hex]' for unicode");
         Console.Write("Search for: ");
@@ -87,16 +92,14 @@ while (!quit)
             search = HexStringToUnicodeChar(search);
         }
 
-        Console.WriteLine($"first char: '{search[0]}' int:{(int)search[0]}");
-
-        if (search.ToLower() == "error")
+        if (search.Equals("error", StringComparison.CurrentCultureIgnoreCase))
         {
             search = '\uFFFD'.ToString();
         }
         
         for (int i = 0; i < lines.Length; i++)
         {
-            if (lines[i].ToLower().Contains(search))
+            if (lines[i].Contains(search, StringComparison.CurrentCultureIgnoreCase))
             {
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine($"{i}: {lines[i]}");
@@ -104,11 +107,11 @@ while (!quit)
             }
         }
     }
-    else if (command.ToLower() == "t")
+    else if (command.Equals("t", StringComparison.CurrentCultureIgnoreCase))
     {
         TextDisplay.NavigateText(text, unicodeSymbols);
     }
-    else if (command.ToLower() == "save")
+    else if (command.Equals("save", StringComparison.CurrentCultureIgnoreCase))
     {
         string fileDestination = Path.GetFullPath("result.txt");
         try
@@ -122,32 +125,9 @@ while (!quit)
             Console.WriteLine(ex.Message);
         }
     }
-    else if (command.ToLower() == "a")
+    else if (command.Equals("a", StringComparison.CurrentCultureIgnoreCase))
     {
-        StringBuilder sb = new();
-        Console.WriteLine($"Analyzing line number {lineNumber}");
-        if (lineNumber < 0 || lineNumber >= lines.Length)
-        {
-            Console.WriteLine("Invalid line number");
-        }
-        else
-        {
-            Console.ForegroundColor = ConsoleColor.White;
-            sb.AppendLine($"CHAR \tCOL \tHEX");
-            //Console.WriteLine($"CHAR \tCOL \tHEX");
-            for (int i = 0; i < lines[lineNumber].Length; i++)// char c in lines[lineNumber])
-            {
-                char c = lines[lineNumber][i];
-                string hex = ((int)c).ToString("X4");
-                string displayChar = c.ToString().Replace("\t", "TAB");
-                sb.AppendLine($"{displayChar}\t#{i.ToString().PadLeft(3, '0')}\t0x{hex}");
-                //Console.WriteLine($"{c} \t#{i.ToString().PadLeft(3,'0')} \t0x{hex}");
-            }
-            result = sb.ToString();
-            Console.WriteLine(result);
-            Console.WriteLine("type 'save' to export result");
-            Console.ForegroundColor = ConsoleColor.Green;
-        }
+        AnalyzeTextLine(lines, result, lineNumber);
     }
     else
     {
@@ -181,39 +161,26 @@ while (!quit)
     }
 }
 
-string HexStringToUnicodeChar(string search)
+static string HexStringToUnicodeChar(string search)
 {
     Console.WriteLine($"Unicode character search: {search}");
-    // from https://stackoverflow.com/questions/8608489/net-convert-from-string-of-hex-values-into-unicode-characters-support-differen
-    string? result = search;
-    if (search.Length >= 6 && search.Substring(0, 2) == "0x")
+    if (search.Length >= 6 && search[..2] == "0x")
     {
-        string hexString = search.Substring(2).Trim();
+        string hexString = search[2..].Trim();
         if ((int)hexString.Length /2 != (float)hexString.Length/2)
         {
             Console.WriteLine("hex string is odd, padding");
             hexString = "0" + hexString;
         }
-        int length = hexString.Length;
-        byte[] bytes = new byte[length / 2];
-
-        for (int i = 0; i < length; i += 2)
-        {
-            bytes[i / 2] = Convert.ToByte(hexString.Substring(i, 2), 16);
-            Console.WriteLine($"byte {i}: {bytes[i / 2]} {(int)bytes[i / 2]}");
-        }
 
         try
-        {
-            char[] chars = Encoding.Latin1.GetChars(bytes);
-            result = "";
-            foreach(char c in chars)
-            {
-                Console.WriteLine($"char: {c} {(int)c}");
-                if ((int)c > 0)
-                    result += c;
-            }
+        {            
+            int charnum = Convert.ToInt32(hexString, 16);
+            string result = char.ConvertFromUtf32(charnum);
+
+            Debug.WriteLine($"char num: {charnum}: {result}");
             Console.WriteLine($"Unicode character {search}: '{result}'");
+            Debug.WriteLine($"Unicode character {search}: '{result}'");
             return result;
         }
         catch (Exception ex)
@@ -224,4 +191,38 @@ string HexStringToUnicodeChar(string search)
     Console.WriteLine($"Unicode hex not recognized, searching for literal text {search}");
     //if (result == null) return search;
     return search;
+}
+
+static string AnalyzeTextLine(string[] lines, string result, int lineNumber)
+{
+    StringBuilder sb = new();
+    Console.WriteLine($"Analyzing line number {lineNumber}");
+    if (lineNumber < 0 || lineNumber >= lines.Length)
+    {
+        Console.WriteLine("Invalid line number");
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.White;
+        sb.AppendLine($"CHAR \tCOL \tHEX");
+        //Console.WriteLine($"CHAR \tCOL \tHEX");
+
+        //for (int i = 0; i < lines[lineNumber].Length; i++)// char c in lines[lineNumber])
+        TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(lines[lineNumber]);
+        int count = 0;
+        while (enumerator.MoveNext())
+        {
+            string sub = (string)enumerator.Current;
+            string displayChar = sub.Replace("\t", "TAB");
+            int codepoint = char.ConvertToUtf32(sub, 0);
+            sb.AppendLine($"{displayChar}\t#{count.ToString().PadLeft(3, '0')}\t0x{codepoint:X4}");
+        }
+
+        result = sb.ToString();
+        Console.WriteLine(result);
+        Console.WriteLine("type 'save' to export result");
+        Console.ForegroundColor = ConsoleColor.Green;
+    }
+
+    return result;
 }
