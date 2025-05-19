@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using StringAnalyzer;
 using System.Text;
+using System.Text.Unicode;
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine("String analyzer");
 
@@ -60,7 +61,11 @@ while (!quit)
     Console.ForegroundColor = ConsoleColor.Green;
     Console.Write($"[{lineNumber}]: ");
     string? command = Console.ReadLine();
+    
     if (command == null) continue;
+    command = command.Trim();
+    if (command.Length < 1) continue;
+
     if (command.ToLower() == "q")
     { 
         quit = true;
@@ -72,14 +77,23 @@ while (!quit)
     }
     else if (command.ToLower() == "s")
     {
+        Console.WriteLine("Search for text in file. use 'error' to search for '0xFFFD' (Replacement Char) or '0x[hex]' for unicode");
         Console.Write("Search for: ");
         string? search = Console.ReadLine();
+        if (search == null) continue;
+
+        if (search.Contains("0x"))
+        {
+            search = HexStringToUnicodeChar(search);
+        }
+
+        Console.WriteLine($"first char: '{search[0]}' int:{(int)search[0]}");
+
         if (search.ToLower() == "error")
         {
             search = '\uFFFD'.ToString();
         }
-        Console.Write($"Searching for {search} / {(int)search[0]}");
-        if (search == null) continue;
+        
         for (int i = 0; i < lines.Length; i++)
         {
             if (lines[i].ToLower().Contains(search))
@@ -149,13 +163,65 @@ while (!quit)
             }
             else
             {
-                Console.WriteLine($"Line number {lineNumber} is out of range, total lines {lines.Length}");
+                Console.WriteLine($"Line number {lineNumber} is out of range, use values 0-{lines.Length-1}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Invalid input");
+            if (ex is ArgumentNullException)
+            {
+                Console.WriteLine("Invalid input: Argument is null");
+            }
+            else
+            {
+                Console.WriteLine($"Invalid input: {ex.Message}");
+            }
             lineNumber = 0;
         }
     }
+}
+
+string HexStringToUnicodeChar(string search)
+{
+    Console.WriteLine($"Unicode character search: {search}");
+    // from https://stackoverflow.com/questions/8608489/net-convert-from-string-of-hex-values-into-unicode-characters-support-differen
+    string? result = search;
+    if (search.Length >= 6 && search.Substring(0, 2) == "0x")
+    {
+        string hexString = search.Substring(2).Trim();
+        if ((int)hexString.Length /2 != (float)hexString.Length/2)
+        {
+            Console.WriteLine("hex string is odd, padding");
+            hexString = "0" + hexString;
+        }
+        int length = hexString.Length;
+        byte[] bytes = new byte[length / 2];
+
+        for (int i = 0; i < length; i += 2)
+        {
+            bytes[i / 2] = Convert.ToByte(hexString.Substring(i, 2), 16);
+            Console.WriteLine($"byte {i}: {bytes[i / 2]} {(int)bytes[i / 2]}");
+        }
+
+        try
+        {
+            char[] chars = Encoding.Latin1.GetChars(bytes);
+            result = "";
+            foreach(char c in chars)
+            {
+                Console.WriteLine($"char: {c} {(int)c}");
+                if ((int)c > 0)
+                    result += c;
+            }
+            Console.WriteLine($"Unicode character {search}: '{result}'");
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception parsing hex {hexString}: {ex.Message}");
+        }
+    }
+    Console.WriteLine($"Unicode hex not recognized, searching for literal text {search}");
+    //if (result == null) return search;
+    return search;
 }
