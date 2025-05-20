@@ -127,11 +127,11 @@ while (!quit)
     }
     else if (command.Equals("at", StringComparison.CurrentCultureIgnoreCase)) // not shown in command list, not useful
     {
-        AnalyzeTextLine(lines, result, lineNumber, unicodeSymbols, true);
+        result = AnalyzeTextLine(lines, result, lineNumber, unicodeSymbols, true);
     }
     else if (command.Equals("a", StringComparison.CurrentCultureIgnoreCase))
     {
-        AnalyzeTextLine(lines, result, lineNumber, unicodeSymbols, false);
+        result = AnalyzeTextLine(lines, result, lineNumber, unicodeSymbols, false);
     }
     else
     {
