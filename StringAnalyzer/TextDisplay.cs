@@ -48,7 +48,7 @@ namespace StringAnalyzer
                         Console.ForegroundColor = ConsoleColor.White;
                         string displayText = lines[i].Substring(0, Math.Min(lines[i].Length, ConsoleWidth - LineInfoPadding));
                         displayText = displayText.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E // ▓
-                        displayText = displayText.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370 // █
+                        //displayText = displayText.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370 // █
                         Console.WriteLine(displayText);
                     }
                 }
@@ -124,7 +124,7 @@ namespace StringAnalyzer
                 if (SelectedChar != null)
                 {
                     displayChar = SelectedChar; //SelectedChar.ToString() + "";
-                    //displayChar = displayChar.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
+                    displayChar = displayChar.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
 
                     //sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
                     //sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
@@ -132,6 +132,9 @@ namespace StringAnalyzer
                 Console.Write(displayChar);
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.BackgroundColor = ConsoleColor.Black;
+
+                Console.SetCursorPosition(0, 14);
+                Console.WriteLine("Esc/Q > quit, L > select line number, use arrow keys to navigate.");
 
                 keyInfo = Console.ReadKey();
 
@@ -172,6 +175,16 @@ namespace StringAnalyzer
                         currentCol = currentLineLength - 1;
                     }
                 }
+                else if (keyInfo.Key == ConsoleKey.L)
+                {
+                    Console.SetCursorPosition(0, 15);
+                    Console.Write("Select line number: ");
+                    string? gotoLine = Console.ReadLine();
+                    if (int.TryParse(gotoLine, out int selectline))
+                    {
+                        currentLine = selectline;
+                    }
+                }
             }
 
             static List<string> GetTextElements(string text)
@@ -183,8 +196,8 @@ namespace StringAnalyzer
                 while (enumerator.MoveNext())
                 {
                     string sub = (string)enumerator.Current;
-                    sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
-                    sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
+                    //sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
+                    //sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
                     textElements.Add(sub);
                     count++;
                 }
@@ -202,8 +215,8 @@ namespace StringAnalyzer
             while (enumerator.MoveNext())
             {
                 string sub = enumerator.Current.ToString();
-                sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
-                sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
+                //sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
+                //sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
                 textElements.Add(sub);
                 count++;
             }
