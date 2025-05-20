@@ -109,7 +109,11 @@ while (!quit)
     }
     else if (command.Equals("t", StringComparison.CurrentCultureIgnoreCase))
     {
-        TextDisplay.NavigateText(text, unicodeSymbols);
+        TextDisplay.NavigateText(text, unicodeSymbols, true);
+    }
+    else if (command.Equals("tc", StringComparison.CurrentCultureIgnoreCase))
+    {
+        TextDisplay.NavigateText(text, unicodeSymbols, false);
     }
     else if (command.Equals("save", StringComparison.CurrentCultureIgnoreCase))
     {
@@ -127,7 +131,11 @@ while (!quit)
     }
     else if (command.Equals("a", StringComparison.CurrentCultureIgnoreCase))
     {
-        AnalyzeTextLine(lines, result, lineNumber);
+        AnalyzeTextLine(lines, result, lineNumber, unicodeSymbols, true);
+    }
+    else if (command.Equals("ac", StringComparison.CurrentCultureIgnoreCase))
+    {
+        AnalyzeTextLine(lines, result, lineNumber, unicodeSymbols, false);
     }
     else
     {
@@ -143,7 +151,7 @@ while (!quit)
             }
             else
             {
-                Console.WriteLine($"Line number {lineNumber} is out of range, use values 0-{lines.Length-1}");
+                Console.WriteLine($"Line number {lineNumber} is out of range, use values 0-{lines.Length - 1}");
             }
         }
         catch (Exception ex)
@@ -193,7 +201,7 @@ static string HexStringToUnicodeChar(string search)
     return search;
 }
 
-static string AnalyzeTextLine(string[] lines, string result, int lineNumber)
+static string AnalyzeTextLine(string[] lines, string result, int lineNumber, Dictionary<string, string> unicodeSymbols, bool useTextElements)
 {
     StringBuilder sb = new();
     Console.WriteLine($"Analyzing line number {lineNumber}");
@@ -204,18 +212,54 @@ static string AnalyzeTextLine(string[] lines, string result, int lineNumber)
     else
     {
         Console.ForegroundColor = ConsoleColor.White;
-        sb.AppendLine($"CHAR \tCOL \tHEX");
+        sb.AppendLine($"CHAR\tCOL\tHEX\tNAME");
         //Console.WriteLine($"CHAR \tCOL \tHEX");
 
         //for (int i = 0; i < lines[lineNumber].Length; i++)// char c in lines[lineNumber])
-        TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(lines[lineNumber]);
+
+        List<string> dislayStrings = [];
+        if (useTextElements)
+        {
+            TextElementEnumerator elementEnumerator = StringInfo.GetTextElementEnumerator(lines[lineNumber]);
+            while (elementEnumerator.MoveNext())
+            {
+                dislayStrings.Add((string)elementEnumerator.Current);
+            }
+        }
+        else
+        {
+            foreach (char c in lines[lineNumber])
+            {
+                dislayStrings.Add(c.ToString());
+            }
+        }
+
+        //TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(lines[lineNumber]);
         int count = 0;
+        var enumerator = dislayStrings.GetEnumerator();
         while (enumerator.MoveNext())
         {
-            string sub = (string)enumerator.Current;
+            string sub = enumerator.Current;
+
             string displayChar = sub.Replace("\t", "TAB");
-            int codepoint = char.ConvertToUtf32(sub, 0);
-            sb.AppendLine($"{displayChar}\t#{count.ToString().PadLeft(3, '0')}\t0x{codepoint:X4}");
+            int codepoint = 0;
+            try
+            {
+                codepoint = char.ConvertToUtf32(sub, 0);
+            }
+            catch
+            {
+                Debug.WriteLine("Error getting codepoint");
+            }
+            string hex = $"{codepoint:X4}";
+            string symbolname = "UNKNOWN";
+            if (unicodeSymbols.TryGetValue(hex, out string? value))
+            {
+                symbolname = value;
+            }
+            Console.WriteLine($"Unicode name: {symbolname}");
+
+            sb.AppendLine($"{displayChar}\t#{count.ToString().PadLeft(3, '0')}\t0x{codepoint:X4}\t{symbolname}");
         }
 
         result = sb.ToString();

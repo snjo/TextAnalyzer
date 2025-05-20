@@ -10,7 +10,7 @@ namespace StringAnalyzer
 {
     class TextDisplay
     {
-        public static void NavigateText(string text, Dictionary<string, string> unicodeSymbols)
+        public static void NavigateText(string text, Dictionary<string, string> unicodeSymbols, bool useTextElements = true)
         {
             bool quit = false;
             string[] lines = text.Split(Environment.NewLine);
@@ -27,7 +27,7 @@ namespace StringAnalyzer
                 int ConsoleWidth = Console.WindowWidth;
                 Console.Clear();
                 Console.WriteLine("TEXT NAVIGATOR");
-                for (int i = currentLine - 1; i < currentLine+6; i++)
+                for (int i = currentLine - 1; i < currentLine + 6; i++)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkBlue;
                     if (i < 0)
@@ -47,8 +47,8 @@ namespace StringAnalyzer
                         Console.Write($"[{(currentLine + (i - currentLine)).ToString().PadLeft(4, '0')}] ");
                         Console.ForegroundColor = ConsoleColor.White;
                         string displayText = lines[i].Substring(0, Math.Min(lines[i].Length, ConsoleWidth - LineInfoPadding));
-                        displayText = displayText.Replace('\t', '▓');
-                        displayText = displayText.Replace('\uFFFD', '█'); // make unicode replacement characters obvious
+                        displayText = displayText.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E // ▓
+                        displayText = displayText.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370 // █
                         Console.WriteLine(displayText);
                     }
                 }
@@ -56,17 +56,19 @@ namespace StringAnalyzer
                 Debug.WriteLine($"cl:{currentLine} / {lines.Length}   cc:{currentCol}");
 
                 // Create unicode character list
-                TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(lines[currentLine]);
-                int count = 0;
+
                 List<string> textElements = [];
-                while (enumerator.MoveNext())
+
+                //CharEnumerator charEnumerator = lines[currentLine].GetEnumerator();
+                if (useTextElements)
                 {
-                    string sub = (string)enumerator.Current;
-                    sub = sub.Replace('\t', '▓');
-                    sub = sub.Replace('\uFFFD', '█');
-                    textElements.Add(sub);
-                    count++;
+                    textElements = GetTextElements(lines[currentLine]);
                 }
+                else
+                {
+                    textElements = GetCharacters(lines[currentLine]);
+                }
+
                 int currentLineLength = textElements.Count;
 
                 // DRAW SELECTED CHARACTER
@@ -87,7 +89,7 @@ namespace StringAnalyzer
                 Console.WriteLine($"-----");
                 Console.WriteLine($"Line:{currentLine} Col:{clampedCol}");
                 Console.WriteLine($"Character: {SelectedChar}");
-                
+
 
                 if (clampedCol != currentCol) currentCol = clampedCol;
 
@@ -96,7 +98,14 @@ namespace StringAnalyzer
                 {
                     //hex = ((int)SelectedChar).ToString("X4");
                     //int codepoint = char.ConvertToUtf32(sub, 0);
-                    hex = $"{char.ConvertToUtf32(SelectedChar, 0):X4}";
+                    try
+                    {
+                        hex = $"{char.ConvertToUtf32(SelectedChar, 0):X4}";
+                    }
+                    catch
+                    {
+                        Debug.WriteLine("Error decoding character");
+                    }
                 }
                 Console.WriteLine($"Hex code: {hex}");
                 string symbolname = "UNKNOWN";
@@ -106,7 +115,7 @@ namespace StringAnalyzer
                 }
                 Console.WriteLine($"Unicode name: {symbolname}");
 
-                
+
 
                 Console.SetCursorPosition(clampedCol + LineInfoPadding, 2);
                 Console.BackgroundColor = ConsoleColor.Red;
@@ -115,7 +124,10 @@ namespace StringAnalyzer
                 if (SelectedChar != null)
                 {
                     displayChar = SelectedChar; //SelectedChar.ToString() + "";
-                    displayChar = displayChar.Replace('\t', '▓');
+                    //displayChar = displayChar.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
+
+                    //sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
+                    //sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
                 }
                 Console.Write(displayChar);
                 Console.ForegroundColor = ConsoleColor.White;
@@ -161,6 +173,42 @@ namespace StringAnalyzer
                     }
                 }
             }
+
+            static List<string> GetTextElements(string text)
+            {
+                TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
+
+                int count = 0;
+                List<string> textElements = [];
+                while (enumerator.MoveNext())
+                {
+                    string sub = (string)enumerator.Current;
+                    sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
+                    sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
+                    textElements.Add(sub);
+                    count++;
+                }
+
+                return textElements;
+            }
+        }
+
+        private static List<string> GetCharacters(string text)
+        {
+            CharEnumerator enumerator = text.GetEnumerator();
+
+            int count = 0;
+            List<string> textElements = [];
+            while (enumerator.MoveNext())
+            {
+                string sub = enumerator.Current.ToString();
+                sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
+                sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
+                textElements.Add(sub);
+                count++;
+            }
+
+            return textElements;
         }
     }
 }
