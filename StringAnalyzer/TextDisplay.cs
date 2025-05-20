@@ -10,6 +10,30 @@ namespace StringAnalyzer
 {
     class TextDisplay
     {
+        public static void MenuWord(string menuText, bool newLine = false)
+        {
+            ConsoleColor previousColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(menuText[0..1]);
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write(menuText[1..]);
+            Console.ForegroundColor = previousColor;
+            if (newLine) Console.WriteLine();
+        }
+
+        public static void MenuWord(string dim1, string highlight, string dim2, bool newLine = false)
+        {
+            ConsoleColor previousColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write(dim1);
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(highlight);
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write(dim2);
+            Console.ForegroundColor = previousColor;
+            if (newLine) Console.WriteLine();
+        }
+
         public static void NavigateText(string text, Dictionary<string, string> unicodeSymbols, bool useTextElements = true)
         {
             bool quit = false;
@@ -59,7 +83,6 @@ namespace StringAnalyzer
 
                 List<string> textElements = [];
 
-                //CharEnumerator charEnumerator = lines[currentLine].GetEnumerator();
                 if (useTextElements)
                 {
                     textElements = GetTextElements(lines[currentLine]);
@@ -76,7 +99,7 @@ namespace StringAnalyzer
                 clampedCol = Math.Max(0, clampedCol); // prevent negative numbers
                 clampedCol = Math.Min(clampedCol, ConsoleWidth - LineInfoPadding - 1);
                 string SelectedChar = "";
-                if (textElements.Count > 0)//lines[currentLine].Length > 0)
+                if (textElements.Count > 0)
                 {
                     SelectedChar = textElements[clampedCol];
                 }
@@ -96,8 +119,6 @@ namespace StringAnalyzer
                 string hex = "...";
                 if (SelectedChar != null && SelectedChar.Length > 0)
                 {
-                    //hex = ((int)SelectedChar).ToString("X4");
-                    //int codepoint = char.ConvertToUtf32(sub, 0);
                     try
                     {
                         hex = $"{char.ConvertToUtf32(SelectedChar, 0):X4}";
@@ -123,18 +144,17 @@ namespace StringAnalyzer
                 string displayChar = "";
                 if (SelectedChar != null)
                 {
-                    displayChar = SelectedChar; //SelectedChar.ToString() + "";
+                    displayChar = SelectedChar;
                     displayChar = displayChar.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
-
-                    //sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
-                    //sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
                 }
                 Console.Write(displayChar);
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.BackgroundColor = ConsoleColor.Black;
 
                 Console.SetCursorPosition(0, 14);
-                Console.WriteLine("Esc/Q > quit, L > select line number, use arrow keys to navigate.");
+                MenuWord("Use ", "arrow keys", " to navigate", true);
+                MenuWord("Line select", true);
+                MenuWord("Quit", true);
 
                 keyInfo = Console.ReadKey();
 
@@ -196,8 +216,6 @@ namespace StringAnalyzer
                 while (enumerator.MoveNext())
                 {
                     string sub = (string)enumerator.Current;
-                    //sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
-                    //sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
                     textElements.Add(sub);
                     count++;
                 }
@@ -215,8 +233,6 @@ namespace StringAnalyzer
             while (enumerator.MoveNext())
             {
                 string sub = enumerator.Current.ToString();
-                //sub = sub.Replace('\t', '\u2B7E'); // tab symbol ⭾ 0x2B7E
-                //sub = sub.Replace('\uFFFD', '\u2370'); // box question mark ⍰ 0x2370
                 textElements.Add(sub);
                 count++;
             }

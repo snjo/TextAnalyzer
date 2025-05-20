@@ -5,30 +5,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Unicode;
 Console.ForegroundColor = ConsoleColor.Green;
-Console.WriteLine("String analyzer");
-
-//bool fileFound = false;
-//string? file = null;
-
-//while (fileFound == false)
-//{
-//    Console.Write("Load text file: ");
-//    file = Console.ReadLine();
-//    if (File.Exists(file) == false)
-//    {
-//        Console.WriteLine("File does not exist, try again");
-//    }
-//    else
-//    {
-//        fileFound = true;
-//    }
-//}
-
-//if (file == null)
-//{
-//    Console.WriteLine("File name is null, exiting");
-//    return;
-//}
+Console.WriteLine("Text analyzer");
 
 Console.OutputEncoding = System.Text.Encoding.Unicode;
 
@@ -62,7 +39,17 @@ while (!quit)
         }
     }
     Console.ForegroundColor = ConsoleColor.DarkBlue;
-    Console.WriteLine("S > Search for text.  A > analyze line chars.  Q > quit.  L > load file.  [number] > select line.  t > browse text");
+    //Console.WriteLine("S > Search for text.  A > analyze line chars.  Q > quit.  L > load file.  [number] > select line.  t > browse text");
+
+    TextDisplay.MenuWord("Search   ");
+    TextDisplay.MenuWord("Analyze line   ");
+    TextDisplay.MenuWord("Browse text   ");
+    TextDisplay.MenuWord("Load file   ");
+    TextDisplay.MenuWord("[","number", "] select line   ");
+    TextDisplay.MenuWord("Quit");
+    Console.WriteLine();
+
+
     Console.ForegroundColor = ConsoleColor.Green;
     Console.Write($"[{lineNumber}]: ");
     string? command = Console.ReadLine();
@@ -107,7 +94,7 @@ while (!quit)
             }
         }
     }
-    else if (command.Equals("t", StringComparison.CurrentCultureIgnoreCase))
+    else if (command.Equals("b", StringComparison.CurrentCultureIgnoreCase))
     {
         TextDisplay.NavigateText(text, unicodeSymbols, true);
     }
